@@ -53,7 +53,7 @@ class TransformPolimorf(beam.DoFn):
             except AttributeError:
                 noun_gender = 'unknown'
 
-        yield ('{};{};{};{};{};{}'.format(word, baseform, part, noun_number, noun_gender, noun_type))
+        yield (u'{};{};{};{};{};{}'.format(word, baseform, part, noun_number, noun_gender, noun_type))
 
 class FilterNouns(beam.DoFn):
     def process(self, element):
@@ -105,17 +105,17 @@ def run():
        | 'AddMissingData' >> beam.ParDo(AddTypeOfWord())
        | 'ExtractData' >> beam.ParDo(TransformPolimorf())
        | 'RemveNotNouns' >> beam.ParDo(FilterNouns())
-       | 'WriteToText' >> beam.io.WriteToText(file_path_prefix = '{}\{}'.format(output, output_prefix), file_name_suffix = output_file_suffix)
+       | 'WriteToText' >> beam.io.WriteToText(file_path_prefix = '{}/{}'.format(output, output_prefix), file_name_suffix = output_file_suffix)
    )
 
    if runner == 'DataFlowRunner':
       p.run()
    else:
       p.run().wait_until_finish()
-   logging.getLogger().setLevel(logging.INFO)
+   logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
    reload(sys)
    sys.setdefaultencoding('utf8')
-   
+
    run()
