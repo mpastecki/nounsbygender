@@ -69,6 +69,7 @@ def run():
    parser.add_argument('--output', required=True, help='Specify Local or Cloud Storage Path for output files')
    parser.add_argument('--bucket', required=False, help='Specify Cloud Storage Bucket for output', default='none')
    parser.add_argument('--project',required=False, help='Specify Google Cloud Project', default='none')
+   parser.add_argument('--region',required=False, help='Specify Google Cloud Region', default='europe-west1')
    group = parser.add_mutually_exclusive_group(required=True)
    group.add_argument('--DirectRunner',action='store_true')
    group.add_argument('--DataFlowRunner',action='store_true')
@@ -84,6 +85,7 @@ def run():
    input = opts.input
    output = opts.output
    project = opts.project
+   region = opts.region
 
    argv = [
      '--project={0}'.format(project),
@@ -91,7 +93,8 @@ def run():
      '--save_main_session',
      '--staging_location=gs://{0}/staging/'.format(bucket),
      '--temp_location=gs://{0}/staging/'.format(bucket),
-     '--runner={0}'.format(runner)
+     '--runner={0}'.format(runner),
+     '--region={0}'.format(region)
    ]
 
    p = beam.Pipeline(argv=argv)
@@ -112,7 +115,7 @@ def run():
       p.run()
    else:
       p.run().wait_until_finish()
-   logging.getLogger().setLevel(logging.DEBUG)
+   logging.getLogger().setLevel(logging.INFO)
 
 if __name__ == '__main__':
    reload(sys)
