@@ -86,7 +86,6 @@ def run():
    input = opts.input
    output = opts.output
    project = opts.project
-   polimorf = opts.polimorf
 
    argv = [
      '--project={0}'.format(project),
