@@ -62,8 +62,6 @@ class FilterNouns(beam.DoFn):
             yield element
 
 def run():
-   reload(sys)
-   sys.setdefaultencoding('utf8')
 
    # Command line arguments
    parser = argparse.ArgumentParser(description='Polimorf Transform')
@@ -117,4 +115,7 @@ def run():
    logging.getLogger().setLevel(logging.INFO)
 
 if __name__ == '__main__':
+   reload(sys)
+   sys.setdefaultencoding('utf8')
+   
    run()
