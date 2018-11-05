@@ -110,5 +110,11 @@ def run():
        | 'WriteToText' >> beam.io.WriteToText(file_path_prefix = '{}\{}'.format(output, output_prefix), file_name_suffix = output_file_suffix)
    )
 
+   if runner == 'DataFlowRunner':
+      p.run()
+   else:
+      p.run().wait_until_finish()
+   logging.getLogger().setLevel(logging.INFO)
+
 if __name__ == '__main__':
    run()
