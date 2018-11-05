@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import argparse
+import logging
 import apache_beam as beam
 import sys
 import re
@@ -59,23 +61,55 @@ class FilterNouns(beam.DoFn):
         if form == 'subst' or form == 'depr':
             yield element
 
-if __name__ == '__main__':
-
+def run():
    reload(sys)
    sys.setdefaultencoding('utf8')
 
-   p = beam.Pipeline(argv=sys.argv)
-   input = './data/slownik.tab'
-   output_prefix = './data/polimorf.output'
+   # Command line arguments
+   parser = argparse.ArgumentParser(description='Polimorf Transform')
+   parser.add_argument('--input', required=True, help='Specify Local or Cloud Storage for input files')
+   parser.add_argument('--output', required=True, help='Specify Local or Cloud Storage Path for output files')
+   parser.add_argument('--bucket', required=False, help='Specify Cloud Storage Bucket for output', default='none')
+   parser.add_argument('--project',required=False, help='Specify Google Cloud Project', default='none')
+   group = parser.add_mutually_exclusive_group(required=True)
+   group.add_argument('--DirectRunner',action='store_true')
+   group.add_argument('--DataFlowRunner',action='store_true')
+
+   opts = parser.parse_args()
+
+   if opts.DirectRunner:
+     runner='DirectRunner'
+   if opts.DataFlowRunner:
+     runner='DataFlowRunner'
+
+   bucket = opts.bucket
+   input = opts.input
+   output = opts.output
+   project = opts.project
+   polimorf = opts.polimorf
+
+   argv = [
+     '--project={0}'.format(project),
+     '--job_name=nounscountbygender',
+     '--save_main_session',
+     '--staging_location=gs://{0}/staging/'.format(bucket),
+     '--temp_location=gs://{0}/staging/'.format(bucket),
+     '--runner={0}'.format(runner)
+   ]
+
+   p = beam.Pipeline(argv=argv)
+
+   output_prefix = 'polimorf.output'
+   output_file_suffix = '.csv'
 
    # Let's get our dictionary shaped according to our needs
    (p
        | 'ReadFromText' >> beam.io.ReadFromText(input)
-#       | 'DecodeUnicode' >> beam.FlatMap(lambda encoded: encoded.decode('utf-8'))
        | 'AddMissingData' >> beam.ParDo(AddTypeOfWord())
        | 'ExtractData' >> beam.ParDo(TransformPolimorf())
        | 'RemveNotNouns' >> beam.ParDo(FilterNouns())
-       | 'WriteToText' >> beam.io.WriteToText(output_prefix)
+       | 'WriteToText' >> beam.io.WriteToText(file_path_prefix = '{}\{}'.format(output, output_prefix), file_name_suffix = output_file_suffix)
    )
 
-   p.run().wait_until_finish()
+if __name__ == '__main__':
+   run()
